@@ -1,0 +1,24 @@
+digraph "Call Graph" {
+	label="Call Graph";
+
+	Node0x55da0e39acc0 [shape=record,shape=circle,label="{main|{<s0>1|<s1>2|<s2>3|<s3>4|<s4>5}}"];
+	Node0x55da0e39acc0:s0 -> Node0x55da0e3df770[color=black];
+	Node0x55da0e39acc0:s1 -> Node0x55da0e3c6250[color=black];
+	Node0x55da0e39acc0:s2 -> Node0x55da0e3df5f0[color=black];
+	Node0x55da0e39acc0:s3 -> Node0x55da0e3e0610[color=black];
+	Node0x55da0e39acc0:s4 -> Node0x55da0e3df010[color=black];
+	Node0x55da0e3df5f0 [shape=record,shape=circle,label="{_ZN10sink_file325calculate_important_valueEv}"];
+	Node0x55da0e3df770 [shape=record,shape=circle,label="{_ZN10sink_file125calculate_important_valueEv|{<s0>6|<s1>7}}"];
+	Node0x55da0e3df770:s0 -> Node0x55da0e3e0610[color=black];
+	Node0x55da0e3df770:s1 -> Node0x55da0e3e0710[color=black];
+	Node0x55da0e3e0610 [shape=record,shape=circle,label="{_ZN11taint_file117get_tainted_valueEv}"];
+	Node0x55da0e3df280 [shape=record,shape=circle,label="{_ZN10sink_file2C2Ev}"];
+	Node0x55da0e3e0710 [shape=record,shape=circle,label="{_ZN11taint_file217get_tainted_valueEv}"];
+	Node0x55da0e3df570 [shape=record,shape=circle,label="{_ZN10sink_file3C2Ev}"];
+	Node0x55da0e3df130 [shape=record,shape=circle,label="{_ZN10sink_file1C2Ev}"];
+	Node0x55da0e3e0590 [shape=record,shape=circle,label="{_ZN11taint_file1C2Ev}"];
+	Node0x55da0e3df010 [shape=record,shape=circle,label="{_ZN10sink_file121consume_tainted_valueEi}"];
+	Node0x55da0e3e0690 [shape=record,shape=circle,label="{_ZN11taint_file2C2Ev}"];
+	Node0x55da0e3c6250 [shape=record,shape=circle,label="{_ZN10sink_file225calculate_important_valueEv|{<s0>8}}"];
+	Node0x55da0e3c6250:s0 -> Node0x55da0e3e0610[color=black];
+}
