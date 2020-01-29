@@ -1,6 +1,6 @@
 import re 
 
-f = open("./SVF/test.dot")
+f = open("./SVF/svfg_final.dot")
 graph = f.read().splitlines()
 
 sources = set(["Node0x7ffff32794e0"])
@@ -44,31 +44,19 @@ def getConnectingEdges(edge):
         if (node_src is not None and curEdge is not None) and (node_src.group(1) == curEdge.group(1)):
             edges += [graph[x]]
     return edges
-
-def getDefinitions(edges):
-    defs = []
-    i = 0
-    for x in edges:
-        #while(graph[i])
-        edge_src = source_regex.match(x)
-        edge_dest = destination_regex.match(x)
-        while definition_regex(graph[i]) != edge_src.group(1):
-            i += 1
-        defs += graph[i]
         
 def output_final_dot_graph(edges):
     output_file = open('output.dot', 'w')
     nodes = get_nodes_from_edges(edges)
     
     for x in graph:
-        edge_src = source_regex.match(x)
-        edge_dest = destination_regex.match(x)
         node_def = definition_regex.match(x)
-
-        if ( (edge_src != None) and (edge_src.group(1) in nodes) ) \
-            or ( (edge_dest != None) and (edge_dest.group(1) in nodes) ) \
-            or ( (node_def != None) and (node_def.group(1) in nodes) ):
-                output_file.write(x + '\n')
+        if (node_def != None and node_def.group(1) in nodes) or (x in edges):
+            output_file.write(x + '\n')
+        #if ( (edge_src != None) and (edge_src.group(1) in nodes) ) \
+         #   or ( (edge_dest != None) and (edge_dest.group(1) in nodes) ) \
+          #  or ( (node_def != None) and (node_def.group(1) in nodes) ):
+           #     output_file.write(x + '\n')
 
 def get_nodes_from_edges(edges):
     nodes = set()
