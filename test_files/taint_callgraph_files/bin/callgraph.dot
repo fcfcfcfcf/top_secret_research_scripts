@@ -1,0 +1,33 @@
+digraph "Call graph" {
+	label="Call graph";
+
+	Node0x562651704030 [shape=record,label="{external node}"];
+	Node0x562651704030 -> Node0x5626517040d0;
+	Node0x562651704030 -> Node0x562651728e80;
+	Node0x562651704030 -> Node0x562651728920;
+	Node0x562651704030 -> Node0x562651728f80;
+	Node0x562651704030 -> Node0x562651728dd0;
+	Node0x562651704030 -> Node0x5626517290d0;
+	Node0x562651704030 -> Node0x562651728950;
+	Node0x562651704030 -> Node0x562651729140;
+	Node0x562651704030 -> Node0x562651704100;
+	Node0x562651704030 -> Node0x5626517291b0;
+	Node0x562651704030 -> Node0x562651728ff0;
+	Node0x562651728e80 [shape=record,label="{_ZN10sink_file1C2Ev}"];
+	Node0x562651728f80 [shape=record,label="{_ZN10sink_file2C2Ev}"];
+	Node0x5626517290d0 [shape=record,label="{_ZN10sink_file3C2Ev}"];
+	Node0x562651729140 [shape=record,label="{_ZN11taint_file1C2Ev}"];
+	Node0x5626517291b0 [shape=record,label="{_ZN11taint_file2C2Ev}"];
+	Node0x5626517040d0 [shape=record,label="{main}"];
+	Node0x5626517040d0 -> Node0x562651728920;
+	Node0x5626517040d0 -> Node0x562651728dd0;
+	Node0x5626517040d0 -> Node0x562651728950;
+	Node0x562651728920 [shape=record,label="{_ZN10sink_file125calculate_important_valueEv}"];
+	Node0x562651728920 -> Node0x562651704100;
+	Node0x562651728920 -> Node0x562651728ff0;
+	Node0x562651728dd0 [shape=record,label="{_ZN10sink_file225calculate_important_valueEv}"];
+	Node0x562651728dd0 -> Node0x562651704100;
+	Node0x562651728950 [shape=record,label="{_ZN10sink_file325calculate_important_valueEv}"];
+	Node0x562651704100 [shape=record,label="{_ZN11taint_file117get_tainted_valueEv}"];
+	Node0x562651728ff0 [shape=record,label="{_ZN11taint_file217get_tainted_valueEv}"];
+}
