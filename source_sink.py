@@ -1,80 +1,104 @@
 import re 
+import sys
 
-f = open("./SVF/svfg_final.dot")
-graph = f.read().splitlines()
+if sys.argv[1] != 'taint' and sys.argv[1] != 'sts':
+    print('please use a correct-command line argument, try\npython3 source_sink.py sts\nor\npython3 source_sink.py taint\n')
+    exit(42069)
 
-sources = set(["Node0x7ffff32794e0"])
-sinks = set(["Node0x7ffff34baa90"])
+sources = set(["Node0x7f62940fa5c0", "Node0x7f6294096c10", "Node0x7f6294275a60"])
+sinks = set(["Node0x7f62940e02b0"])
 
 destination_regex = re.compile("^.*? -> (.*)\[style.*$")
 definition_regex = re.compile("^\s*(.*) \[shape.*$")
-source_regex = re.compile("^\s*(.*) -> .*\[style.*$")
+source_regex = re.compile("^\s*(.*?)(?::.*)? -> .*\[style.*$")
 
-def GSTSEP(curEdge, edges):
-    if connectsToSink(curEdge):
-        return edges + [curEdge]
-    elif isLeaf(curEdge):
-        return []
+f = open("./SVF/svfg_final.dot")
+graph = f.read().splitlines()
+f.seek(0)
+
+class Source:
+    def __init__(self):
+        self.visited_edges = []
+        self.output_edges = []
+
+def GSTSEP(cur_edge, my_source):
+    if cur_edge in my_source.visited_edges:
+        my_source.output_edges.remove(cur_edge)
+        return False
     else:
-        for x in getConnectingEdges(curEdge):
-            foundEdges = GSTSEP(x, edges + [curEdge])
-            if foundEdges != []:
-                return foundEdges
-        return []
+        my_source.visited_edges += [cur_edge]
+    print(cur_edge)
+    if is_sink(cur_edge):
+        return True
+    else:
+        for x in getConnectingEdges(cur_edge):
+            if x not in my_source.output_edges:
+                my_source.output_edges += [x]
+                if GSTSEP(x, my_source):
+                    return True
+        if cur_edge == "Node_Start":
+            print("Path from source to sink not found")
+            exit()
+        my_source.output_edges.remove(cur_edge)
+        return False
 
-def connectsToSink(edge):
-    curEdge = destination_regex.match(edge)
-    return (curEdge is not None) and (curEdge.group(1) in sinks)
-    
+def show_taint(cur_edge, my_source):
+    for x in getConnectingEdges(cur_edge):
+        if x not in my_source.output_edges:
+            my_source.output_edges += [x]
+            show_taint(x, my_source)
+
+def is_sink(edge):
+    return edge in sinks
 
 def isLeaf(edge):
-    curEdge = destination_regex.match(edge)
-    for x in range(len(graph)):
-        node_def = destination_regex.match(graph[x])
-        if (node_def is not None and curEdge is not None) and (node_def.group(1) == curEdge.group(1)):
-            if definition_regex.match(graph[x+1]) is not None:
-                return True
-    return False
+    return not (edge in dot_dict)
 
 def getConnectingEdges(edge):
-    edges = []
-    curEdge = destination_regex.match(edge)
-    for x in range(len(graph)):
-        node_src = source_regex.match(graph[x])
-        if (node_src is not None and curEdge is not None) and (node_src.group(1) == curEdge.group(1)):
-            edges += [graph[x]]
-    return edges
+    if edge in dot_dict:
+        return dot_dict[edge]
+    else:
+        return []
         
 def output_final_dot_graph(edges):
     output_file = open('output.dot', 'w')
-    nodes = get_nodes_from_edges(edges)
+    output_file.write('digraph "SVFG" {\n')
+    output_file.write('\tlabel="SVFG";\n')
     
     for x in graph:
         node_def = definition_regex.match(x)
-        if (node_def != None and node_def.group(1) in nodes) or (x in edges):
+        node_src = source_regex.match(x)
+        node_dest = destination_regex.match(x)
+        if (node_def != None and node_def.group(1) in edges) or ((node_src != None and node_src.group(1) in edges) and (node_dest != node_dest.group(1) in edges)):
             output_file.write(x + '\n')
-        #if ( (edge_src != None) and (edge_src.group(1) in nodes) ) \
-         #   or ( (edge_dest != None) and (edge_dest.group(1) in nodes) ) \
-          #  or ( (node_def != None) and (node_def.group(1) in nodes) ):
-           #     output_file.write(x + '\n')
+    output_file.write('}\n')
 
-def get_nodes_from_edges(edges):
-    nodes = set()
-    for edge in edges:
-        edge_src = source_regex.match(edge)
-        edge_dest = destination_regex.match(edge)
 
-        if (edge_src != None):
-            nodes.add(edge_src.group(1))
-        
-        if(edge_dest != None):
-            nodes.add(edge_dest.group(1))
-        
-    return nodes
+def check_for_circular_relationships():
+    for x in dot_dict:
+        for i in dot_dict[x]:
+            if i == x:
+                print("circuler relationship detected at node " + x)
 
-final_edges = set()
+dot_dict = {}
+for line in f:
+    src = source_regex.match(line)
+    if src != None:
+        dot_dict[src.group(1)] = []
+f.seek(0)
+for line in f:
+    src = source_regex.match(line)
+    dest = destination_regex.match(line)
+    if dest != None:
+        dot_dict[src.group(1)] += [dest.group(1)]
+
+final_nodes = set()
 for x in sources:
-    first_edge = x + " -> " + x + "[style=solid];"
-    final_edges = final_edges.union(GSTSEP(first_edge, []))
-
-output_final_dot_graph(final_edges)
+    my_new_source = Source()
+    dot_dict["Node_Start"] = [x]
+    if sys.argv[1] == 'taint':
+        show_taint("Node_Start", my_new_source)
+    elif sys.argv[1] == 'sts':
+        GSTSEP("Node_Start", my_new_source)
+    final_nodes = final_nodes.union(my_new_source.output_edges)
+output_final_dot_graph(final_nodes)
