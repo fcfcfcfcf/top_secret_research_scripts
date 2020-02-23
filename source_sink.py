@@ -5,17 +5,8 @@ import sys
 
 # TODO: turn this into file input
 # Specify sources and sinks
-sources = set( ["Node0x7f629345e2f0"] )
-sources_old = set( [
-                    "Node0x7f62940fa5c0",
-                    "Node0x7f6294096c10",
-                    "Node0x7f6294275a60",
-                    "Node0x7f62937f65e0",
-                    "Node0x7f629345e2f0",
-                    "Node0x7f6293bf4160",
-                    "Node0x7f62940c07f0"
-                   ] )
-sinks = set( ["Node0x7f62940e02b0"] )
+sources = set( ["Node0x55dbdfa1af10", "Node0x55dbdfa1afe0"] )
+sinks = set( ["Node0x55dbdfa1c1b0", "Node0x55dbdfa36f20"] )
 
 # Regex for edges and node definitions
 # Capture group 1 is source node id and group 2 is destination node id
@@ -23,41 +14,7 @@ edge_regex = re.compile( "^\s*(.*?)(?::.*)? -> (.*)\[style.*$" )
 # Captures id of node definition
 node_definition_regex = re.compile( "^\s*(.*) \[shape.*$" )
 
-class def GSTSEP(cur_node, my_source):
-    if cur_node in my_source.visited_nodes:
-        my_source.output_nodes.remove(cur_node)
-        return False
-    else:
-        my_source.visited_nodes += [cur_node]
-    if is_sink(cur_node):
-        my_source.sink_node = cur_node
-        return True
-    else:
-        for x in get_connecting_nodes(cur_node):
-            if x not in my_source.output_nodes:
-                my_source.output_nodes += [x]
-                if GSTSEP(x, my_source):
-                    return True
-        if cur_node == "Node_Start":
-            print("Path from source to sink not found")
-            return False
-        my_source.output_nodes.remove(cur_node)
-        return False
-
-       
-def output_final_dot_graph(nodes):
-    output_file = open('output.dot', 'w')
-    output_file.write('digraph "SVFG" {\n')
-    output_file.write('\tlabel="SVFG";\n')
-    
-    for x in graph:
-        node_def = definition_regex.match(x)
-        node_src = source_regex.match(x)
-        node_dest = destination_regex.match(x)
-        if (node_def != None and node_def.group(1) in nodes) or ((node_src != None and node_src.group(1) in nodes) and (node_dest != node_dest.group(1) in nodes)):
-            output_file.write(x + '\n')
-    output_file.write('}\n')
-
+# TODO: check for loops in source to sink and taint
 def check_for_circular_relationships():
     for x in dot_dict:
         for i in dot_dict[x]:
@@ -89,8 +46,50 @@ def track_taint( current_nodes, output_nodes ):
         output_nodes.append( node )
         track_taint( get_child_nodes( node ), output_nodes )
 
-#=============
+def source_to_sink( sources, output_nodes ):
+    for node in sources:
+        path = []
+        find_paths( node, path, output_nodes )
 
+def find_paths( curr_node, curr_path, output_nodes ):
+    if ( is_sink( curr_node ) ):
+        output_nodes.append( curr_node )
+        return True
+    elif ( is_leaf( curr_node ) ):
+        return False
+    else:
+        found_path = False
+        for child in get_child_nodes( curr_node ):
+            if ( find_paths( child, curr_path.copy(), output_nodes ) ):
+                found_path = True
+
+        if ( found_path ):
+            output_nodes.append( curr_node )
+
+        return found_path
+
+def output_final_dot_graph( valid_nodes, input_file_name ):
+    with open( 'output.dot', 'w' ) as output_file:
+        output_file.write('digraph "SVFG" {\n')
+        output_file.write('\tlabel="SVFG";\n')
+
+        with open( input_file_name, 'r' ) as input_file:
+            for line in input_file:
+                # Try and match regex on current line
+                node = node_definition_regex.match( line )
+                edge = edge_regex.match( line )
+
+                line_has_valid_nodes = ( None != node and get_node_id( node ) in valid_nodes )
+                line_has_valid_nodes = line_has_valid_nodes or \
+                                       ( None != edge \
+                                         and get_edge_source( edge ) in valid_nodes \
+                                         and get_edge_dest( edge ) in valid_nodes )
+                
+                if ( line_has_valid_nodes ):
+                    output_file.write( line + '\n' )
+
+        output_file.write('}\n')
+                    
 def find_missing_fusion(nodes):
     #what
     print('test')
@@ -136,6 +135,7 @@ if __name__ == '__main__':
     if ( 'taint' == analysis_type ):
         track_taint( sources, output_nodes )
     else:
-        print( "lol" )
-    # TODO: Implement sts with graph traversal algorithms
-    # TODO: based on output nodes modify the output file
+        source_to_sink( sources, output_nodes )
+
+    # Write to output file
+    output_final_dot_graph( output_nodes, file_name )
