@@ -1,0 +1,71 @@
+digraph "SVFG" {
+	label="SVFG";
+	Node0x55dbdfa1c1b0 [shape=record,color=blue,label="{NodeID: 49\n66\<--70\n}"];
+
+	Node0x55dbdfa1af10 [shape=record,color=black,label="{NodeID: 36\n111\<--83\n|{<s0>7}}"];
+
+	Node0x55dbdfa1af10:s0 -> Node0x55dbdfa36930[style=solid,color=blue];
+
+	Node0x55dbdfa1c280 [shape=record,color=blue,label="{NodeID: 50\n75\<--74\n}"];
+
+        Node0x55dbdfa1c280 -> Node0x55dbdfa367f0[style=solid]; 
+
+	Node0x55dbdfa36620 [shape=record,color=black,label="{NodeID: 99\n37 = PHI(101, )\n}"];
+
+	Node0x55dbdfa36620 -> Node0x55dbdfa1b730[style=solid];
+
+	Node0x55dbdfa37510 [shape=record,color=black,label="{NodeID: 106\n63 = PHI(41, )\n0th arg _ZN10sink_file121consume_tainted_valueEi }"];
+
+	Node0x55dbdfa37510 -> Node0x55dbdfa1c0e0[style=solid];
+
+	Node0x55dbdfa1afe0 [shape=record,color=black,label="{NodeID: 37\n101\<--103\n|{<s0>4|<s1>6|<s2>8}}"];
+
+	Node0x55dbdfa1afe0:s0 -> Node0x55dbdfa36620[style=solid,color=blue];
+
+	Node0x55dbdfa1afe0:s1 -> Node0x55dbdfa367f0[style=solid,color=blue];
+
+	Node0x55dbdfa367f0 [shape=record,color=black,label="{NodeID: 100\n54 = PHI(101, )\n}"];
+
+	Node0x55dbdfa367f0 -> Node0x55dbdfa1e450[style=solid];
+
+	Node0x55dbdfa1b0b0 [shape=record,color=red,label="{NodeID: 38\n41\<--24\n|{<s0>5}}"];
+
+	Node0x55dbdfa1b0b0:s0 -> Node0x55dbdfa37510[style=solid,color=red];
+
+	Node0x55dbdfa36930 [shape=record,color=black,label="{NodeID: 101\n57 = PHI(111, )\n}"];
+
+	Node0x55dbdfa36930 -> Node0x55dbdfa1e2d0[style=solid];
+
+	Node0x55dbdfa1b730 [shape=record,color=blue,label="{NodeID: 46\n24\<--37\n}"];
+
+	Node0x55dbdfa1b730 -> Node0x55dbdfa1b0b0[style=dashed];
+
+	Node0x55dbdfa1e150 [shape=record,color=black,style=double,label="{NodeID: 74\n70 = Binary(69, 56, )\n}"];
+
+	Node0x55dbdfa1e150 -> Node0x55dbdfa1c1b0[style=solid];
+
+	Node0x55dbdfa1aca0 [shape=record,color=black,label="{NodeID: 33\n53\<--60\n|{<s0>1}}"];
+
+	Node0x55dbdfa1aca0:s0 -> Node0x55dbdfa36f20[style=solid,color=blue];
+
+	Node0x55dbdfa1b250 [shape=record,color=red,label="{NodeID: 40\n69\<--64\n}"];
+
+	Node0x55dbdfa1b250 -> Node0x55dbdfa1e150[style=solid];
+
+	Node0x55dbdfa1e2d0 [shape=record,color=black,style=double,label="{NodeID: 75\n60 = Binary(55, 57, )\n}"];
+
+	Node0x55dbdfa1e2d0 -> Node0x55dbdfa1aca0[style=solid];
+
+	Node0x55dbdfa36f20 [shape=record,color=black,label="{NodeID: 96\n28 = PHI(53, )\n}"];
+
+	Node0x55dbdfa1c0e0 [shape=record,color=blue,label="{NodeID: 48\n64\<--63\n}"];
+
+	Node0x55dbdfa1c0e0 -> Node0x55dbdfa1b250[style=dashed];
+
+	Node0x55dbdfa1e450 [shape=record,color=black,style=double,label="{NodeID: 76\n55 = Binary(56, 54, )\n}"];
+
+	Node0x55dbdfa1e450 -> Node0x55dbdfa1e2d0[style=solid];
+
+        Node0x55dbdfa1e450 -> Node0x55dbdfa1c280[style=solid]; 
+
+}
