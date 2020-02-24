@@ -178,10 +178,15 @@ def find_paths( curr_node, curr_path, output_nodes, cycles_seen ):
         # This is so we can get multiple sinks in a path
         for child in get_child_nodes( curr_node ):
             # Treat these paths as new trees since the previous path was valid
+            # Check if moving to child results in repeated loop
+            # and skip current path if it is
+            next_path = curr_path + [child]
+            if ( is_path_in_repeated_loop( next_path, cycles_seen ) ):
+                continue
             # Copy current path and cycles seen so that each path has its own
             # copy to modify and keep track of
             path_copy = curr_path.copy()
-            cycles_copy = cycles_seen.copy() 
+            cycles_copy = cycles_seen.copy()
             find_paths( child, path_copy, output_nodes, cycles_copy )
         
         # Indicate that the path found was valid
@@ -208,7 +213,10 @@ def find_paths( curr_node, curr_path, output_nodes, cycles_seen ):
             # Check if we have traversed a new loop
             # Next node has already been seen in current path
             if ( child in curr_path ):
-                start_of_cycle_idx = curr_path.index( child )
+                reverse_path = curr_path.copy()
+                reverse_path.reverse()
+                reverse_path_idx = reverse_path.index( child )
+                start_of_cycle_idx = len( curr_path ) - reverse_path_idx - 1
                 end_of_cycle_idx = len( curr_path )
 
                 # Get cycle from current path
