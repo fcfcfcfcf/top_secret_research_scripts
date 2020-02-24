@@ -178,7 +178,11 @@ def find_paths( curr_node, curr_path, output_nodes, cycles_seen ):
         # This is so we can get multiple sinks in a path
         for child in get_child_nodes( curr_node ):
             # Treat these paths as new trees since the previous path was valid
-            find_paths( child, [], output_nodes, [] )
+            # Copy current path and cycles seen so that each path has its own
+            # copy to modify and keep track of
+            path_copy = curr_path.copy()
+            cycles_copy = cycles_seen.copy() 
+            find_paths( child, path_copy, output_nodes, cycles_copy )
         
         # Indicate that the path found was valid
         return True
