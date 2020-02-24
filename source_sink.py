@@ -56,7 +56,9 @@ def GSTSEP(cur_node, my_source):
             if x not in my_source.visited_nodes:
                 if GSTSEP(x, my_source):
                     found = True
-                    
+            elif x in my_source.output_nodes:
+                found = True
+
         if found:
             GSTSEP_counter += 1
             my_source.output_nodes += [cur_node]
