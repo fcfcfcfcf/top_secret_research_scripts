@@ -4,6 +4,12 @@ import json
 import re 
 import sys
 
+# Global for logging
+is_logging = False
+
+# Increase recursive limit for large graphs
+sys.setrecursionlimit( 250000 )
+
 # Initialize empty sources and sinks sets
 sources = set()
 sinks = set()
@@ -12,7 +18,7 @@ sinks = set()
 # Capture group 1 is source node id and group 2 is destination node id
 edge_regex = re.compile( "^\s*(.*?)(?::.*)? -> (.*)\[style.*$" )
 
-# Captures id of node definition
+# Captures node definition ( group 1 is node id )
 node_definition_regex = re.compile( "^\s*(.*) \[shape.*$" )
 
 #==================== Node and edge helper functions ==========================
@@ -166,6 +172,10 @@ def find_paths( curr_node, curr_path, output_nodes, cycles_seen ):
                 - If any of the child paths leads to a sink, we can add the
                 current node to output_nodes  
     """
+    # If logging, output node
+    if ( is_logging ):
+        print( curr_node )
+
     # Update current path with current node
     curr_path.append( curr_node )
 
@@ -242,20 +252,14 @@ def find_paths( curr_node, curr_path, output_nodes, cycles_seen ):
         # Return if any child node led to a sink
         return has_found_path
 
-# TODO: should this be a new python script that analyzes the output dot?
-def find_missing_fusion(nodes):
-    #what
-    print('test')
-
 #====================== Create output file function ===========================
-
 # Create output file with only valid nodes from analysis
 def output_final_dot_graph( valid_nodes, input_file_name, output_file_name ):
     # Open output file with write
     with open( output_file_name, 'w' ) as output_file:
         # Write dot file preamble
-        output_file.write('digraph "SVFG" {\n')
-        output_file.write('\tlabel="SVFG";\n')
+        output_file.write( 'digraph "SVFG" {\n' )
+        output_file.write( '\tlabel="SVFG";\n' )
 
         # Open input file so we can copy over lines that contain valid nodes
         with open( input_file_name, 'r' ) as input_file:
@@ -273,10 +277,10 @@ def output_final_dot_graph( valid_nodes, input_file_name, output_file_name ):
                 # If line contains valid nodes, write line to output file
                 line_has_valid_nodes = valid_node_def or valid_edge
                 if ( line_has_valid_nodes ):
-                    output_file.write( line + '\n' )
+                    output_file.write( line )
 
         # Write dot file epilog
-        output_file.write('}\n')
+        output_file.write( '}\n' )
 
 #============================== Main setup ====================================
 if __name__ == '__main__':
@@ -284,8 +288,12 @@ if __name__ == '__main__':
     if ( ( len( sys.argv ) < 4 ) \
          or ( sys.argv[1] != 'taint' and sys.argv[1] != 'sts' ) ) :
         print( 'Please use a correct-command line argument:' )
-        print( '\tpython3 ' + sys.argv[0] + ' [sts or taint] [dot_file.dot] [sources_and_sinks.json]' )
+        print( '\tpython3 ' + sys.argv[0] + ' [sts, taint] [dot_file.dot] [ss_ids.json]' )
         exit( 1 )
+
+    # Check if logging
+    if ( 5 == len( sys.argv ) and '-log' == sys.argv[4] ):
+        is_logging = True
 
     # Get analysis type, file to analyze and list of sources and sinks
     analysis_type = sys.argv[1]
