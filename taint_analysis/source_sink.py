@@ -7,6 +7,9 @@ import sys
 # Global for logging
 is_logging = False
 
+# Increase recursive limit for large graphs
+sys.setrecursionlimit( 500000 )
+
 # Initialize empty sources and sinks sets
 sources = set()
 sinks = set()
