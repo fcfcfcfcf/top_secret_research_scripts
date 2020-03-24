@@ -26,8 +26,8 @@ GSTSEP_counter = 0
 
 class Source:
     def __init__(self):
-        self.visited_nodes = []
-        self.output_nodes = []
+        self.visited_nodes = set()
+        self.output_nodes = set()
         self.leaf_nodes = []
         self.source_node = 'fake_source_node_id'
         self.sink_node = 'fake_sink_node_id'
@@ -35,20 +35,16 @@ class Source:
 
 
 def GSTSEP(cur_node, my_source):
-    global GSTSEP_counter
-    # if GSTSEP_counter > 505:
-    #     return False
     if cur_node in my_source.visited_nodes:
         if cur_node not in my_source.output_nodes:
             return False
         else:
             return True   
     else:
-        my_source.visited_nodes += [cur_node]
+        my_source.visited_nodes.add(cur_node)
     if is_sink(cur_node):
         my_source.sink_node = cur_node
-        GSTSEP_counter += 1
-        my_source.output_nodes += [cur_node]
+        my_source.output_nodes.add(cur_node)
         print('found path!')
         return True
     else:
@@ -61,8 +57,7 @@ def GSTSEP(cur_node, my_source):
                 found = True
 
         if found:
-            GSTSEP_counter += 1
-            my_source.output_nodes += [cur_node]
+            my_source.output_nodes.add(cur_node)
             return True
         else:
             if cur_node == "Node_Start":
@@ -90,7 +85,7 @@ def find_missing_fusion(my_flows):
 def show_taint(cur_node, my_source):
     for x in get_connecting_nodes(cur_node):
         if x not in my_source.output_nodes:
-            my_source.output_nodes += [x]
+            my_source.output_nodes.add(x)
             show_taint(x, my_source)
 
 def is_sink(node):
