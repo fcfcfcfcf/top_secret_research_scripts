@@ -1,14 +1,18 @@
 import re 
 import sys
+import concurrent.futures
 
-if sys.argv[1] != 'taint' and sys.argv[1] != 'sts' and sys.argv[1] != 'fusion':
+sys.setrecursionlimit(500000)
+
+if sys.argv[1] not in ['taint', 'sts', 'fusion', 'backslice']:
     print('please use a correct-command line argument, try\npython3 source_sink.py sts\nor\npython3 source_sink.py taint\n')
     exit(42069)
-sources = set(["Node0x7f62940fa5c0"])
+#sources = set(["Node0x7f62940fa5c0"])
 #sources = set(["Node0x7f62940fa5c0", "Node0x7f6294096c10", "Node0x7f6294275a60"])
+sources = set(["Node0x7fc4ad3c4210", "Node0x7fc4ad3c4320", "Node0x7fc4ad3c4400", "Node0x7fc4ad3c44e0", "Node0x7fc4ad3c45c0", "Node0x7fc4ad3c46a0", "Node0x7fc4ad3c4780", "Node0x7fc4ad3c4860", "Node0x7fc4ad3c4940", "Node0x7fc4ad3c4a80", "Node0x7fc4ad3c4bc0", "Node0x7fc4ad3c4d30", "Node0x7fc4ad3c5ce0", "Node0x7fc4ad3c7aa0", "Node0x7fc4ad3ca4f0"])
 
 # sources = set(["Node0x7f62940fa5c0", "Node0x7f6294096c10", "Node0x7f6294275a60", "Node0x7f62937f65e0", "Node0x7f629345e2f0", "Node0x7f6293bf4160", "Node0x7f62940c07f0"])
-sinks = set(["Node0x7f62940e02b0"])
+sinks = set(["Node0x7fc4a1c928f0", "Node0x7fc4abf64780", "Node0x7fc4abf64890", "Node0x7fc4abf64970", "Node0x7fc4abf64a50", "Node0x7fc4abf64b30", "Node0x7fc4abf64c70", "Node0x7fc4abf64d80", "Node0x7fc4abf64f20", "Node0x7fc4abf67970", "Node0x7fc4a1e8f700", "Node0x7fc4a1e8f810", "Node0x7fc4a1e8f8f0", "Node0x7fc4a1e8f9d0", "Node0x7fc4a1e8fab0", "Node0x7fc4a1e8fbf0", "Node0x7fc4a1e8fd00", "Node0x7fc4a1e8fea0"])
 
 destination_regex = re.compile("^.*? -> (.*)\[style.*$")
 definition_regex = re.compile("^\s*(.*) \[shape.*$")
@@ -24,13 +28,10 @@ class Source:
     def __init__(self):
         self.visited_nodes = []
         self.output_nodes = []
-        self.source_node = 'fake_source_node_id' 
+        self.leaf_nodes = []
+        self.source_node = 'fake_source_node_id'
         self.sink_node = 'fake_sink_node_id'
 
-# def sym_list_diff(li1, li2):
-#     sym_set = set(li1).symmetric_difference(set(li2))
-    
-#     return (list()
 
 
 def GSTSEP(cur_node, my_source):
@@ -41,14 +42,14 @@ def GSTSEP(cur_node, my_source):
         if cur_node not in my_source.output_nodes:
             return False
         else:
-            return True
-            
+            return True   
     else:
         my_source.visited_nodes += [cur_node]
     if is_sink(cur_node):
         my_source.sink_node = cur_node
         GSTSEP_counter += 1
         my_source.output_nodes += [cur_node]
+        print('found path!')
         return True
     else:
         found = False
@@ -68,13 +69,6 @@ def GSTSEP(cur_node, my_source):
                 print("Path from source to sink not found")
             return False
 
-        #if cur_node == "Node_Start":
-         #   print("Path from source to sink not found")
-          #  return False
-        #my_source.output_nodes.remove(cur_node)
-        #return False
-
-# def get_path(node_from, node_to):
     
 
 def find_missing_fusion(my_flows):
@@ -89,30 +83,9 @@ def find_missing_fusion(my_flows):
     for x in tagged_twice_nodes:
         tagged_nodes.remove(x)
     tagged_nodes_list = list(tagged_nodes) + list(sinks)
-    output_final_dot_graph(tagged_nodes_list)
+    output_final_dot_graph(tagged_nodes_list, 'fusion.dot')
         
                 
-                
-    # print('performing fusion analysis')
-    # good = True
-    # for path in my_flows:
-    #     found = False
-    #     for x in path:
-    #         if not found:
-    #             if x not in sinks:
-    #                 for path_2 in my_flows:
-    #                     if path != path_2:
-    #                         if x in path_2:
-    #                             found = True
-    #     if not found:
-    #         good = False
-    #         print('!WARNING! fusion not detected for flow starting with node: ' + str(path[0]))
-    #     else:
-    #         print('fusion detected for path starting with node: ' + str(path[0]))
-    # if not good:
-    #     print('drone is not fully fused!')
-
-
 
 def show_taint(cur_node, my_source):
     for x in get_connecting_nodes(cur_node):
@@ -131,9 +104,10 @@ def get_connecting_nodes(node):
         return dot_dict[node]
     else:
         return []
+
         
-def output_final_dot_graph(nodes):
-    output_file = open('output.dot', 'w')
+def output_final_dot_graph(nodes, output_file_name):
+    output_file = open(output_file_name, 'w')
     output_file.write('digraph "SVFG" {\n')
     output_file.write('\tlabel="SVFG";\n')
     
@@ -152,31 +126,56 @@ def check_for_circular_relationships():
                 print("circuler relationship detected at node " + x)
 
 dot_dict = {}
-for line in f:
-    src = source_regex.match(line)
-    if src != None:
-        dot_dict[src.group(1)] = []
-f.seek(0)
+# dot_dict_back = {}
 for line in f:
     src = source_regex.match(line)
     dest = destination_regex.match(line)
-    if dest != None:
-        dot_dict[src.group(1)] += [dest.group(1)]
+    if src != None:
+        if src.group(1) in dot_dict:
+            dot_dict[src.group(1)] += [dest.group(1)]
+        else:
+            dot_dict[src.group(1)] = [dest.group(1)]
+
 
 final_nodes = set()
 flows = []
-for x in sources:
-    print(x)
+
+
+def GSTSEP_helper(my_source):
+    print(my_source)
+    global final_nodes
     my_new_source = Source()
-    my_new_source.source_node = x
-    dot_dict["Node_Start"] = [x]
-    if sys.argv[1] == 'taint':
-        show_taint("Node_Start", my_new_source)
-    elif sys.argv[1] == 'sts' or sys.argv[1] == 'fusion':
-        GSTSEP("Node_Start", my_new_source)
-    if sys.argv[1] == 'fusion':
-        flows.append(my_new_source.output_nodes)
+    my_new_source.source_node = my_source
+    dot_dict["Node_Start"] = [my_source]
+    GSTSEP("Node_Start", my_new_source)
     final_nodes = final_nodes.union(my_new_source.output_nodes)
-    output_final_dot_graph(final_nodes)
-if sys.argv[1] == 'fusion':
-    find_missing_fusion(flows + [['Node_super_duper_fake', 'Node_extra_super_fake', 'Node0x7f62940e02b0']])
+
+
+with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
+    executor.map(GSTSEP_helper, sources)
+    
+output_final_dot_graph(final_nodes, 'output.dot')
+
+
+# for x in sources:
+#     print(x)
+#     my_new_source = Source()
+#     my_new_source.source_node = x
+#     dot_dict["Node_Start"] = [x]
+#     # dot_dict_back["Node_Start"] = [x]
+#     if sys.argv[1] == 'taint':
+#         show_taint("Node_Start", my_new_source)
+#         with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
+#             executor.map(show_taint, sources), my_new_source
+#     elif sys.argv[1] == 'sts' or sys.argv[1] == 'fusion':
+#         GSTSEP("Node_Start", my_new_source)
+#     elif sys.argv[1] == 'backslice':
+#         backwards_slice("Node_Start", my_new_source)
+#         output_final_dot_graph(my_new_source.leaf_nodes, 'leaves.dot')
+#     if sys.argv[1] == 'fusion':
+#         flows.append(my_new_source.output_nodes)
+    
+#     final_nodes = final_nodes.union(my_new_source.output_nodes)
+#     output_final_dot_graph(final_nodes, 'output.dot')
+# if sys.argv[1] == 'fusion':
+#     find_missing_fusion(flows + [['Node_super_duper_fake', 'Node_extra_super_fake', 'Node0x7f62940e02b0']])
